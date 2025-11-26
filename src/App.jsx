@@ -101,17 +101,17 @@ const db = getFirestore(app);
 const appId = 'betzade-6765d';
 
 // --- YAPAY ZEKA KODU ---
-// KRİTİK DÜZELTME: process erişimini en güvenli şekilde yapıyoruz, yoksa direkt boş string atıyoruz.
-// NOT: Anahtarın Vercel'de REACT_APP_GEMINI_API_KEY olarak tanımlanması GEREKİR.
+// KRİTİK DÜZELTME: Sadece bilinen client-side değişkenlerini okumaya odaklanıyoruz.
+// process.env.REACT_APP_... veya process.env.NEXT_PUBLIC_... gibi ön ekli değişkenler istemciye aktarılır.
 const VERCEL_GEMINI_API_KEY = (() => {
     let key = '';
     try {
         if (typeof process !== 'undefined' && process.env) {
-            // Vercel/Next/CRA ortamlarında bilinen tüm değişken adlarını dener
-            key = process.env.REACT_APP_GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
+            // Sadece client-side için tasarlanmış ön ekli değişkenleri kontrol et.
+            key = process.env.REACT_APP_GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
         }
     } catch (e) {
-        // process tanımlı değilse bu blok çalışır ve key boş kalır, bu da beklenendir.
+        // process tanımlı değilse bu blok çalışır.
     }
     return key;
 })();
@@ -155,7 +155,7 @@ const fetchWithRetry = async (url, options, maxRetries = 3) => {
 const callGemini = async (prompt, systemInstruction = "", showModal) => {
     const apiKey = VERCEL_GEMINI_API_KEY || ''; 
     if (!apiKey) {
-        showModal({ title: "AI Yapılandırma Hatası", message: "Yapay zeka için API anahtarı (GEMINI_API_KEY) tanımlanmamış. Vercel ortam değişkenlerini kontrol edin." });
+        showModal({ title: "AI Yapılandırma Hatası", message: "Yapay zeka için API anahtarı (REACT_APP_GEMINI_API_KEY) tanımlanmamış. Lütfen Vercel ortam değişkenlerini kontrol edin." });
         console.error("Yapay zeka API anahtarı eksik.");
         return null;
     }
@@ -197,8 +197,7 @@ const callGemini = async (prompt, systemInstruction = "", showModal) => {
 const callGeminiChat = async (history, newMessage, showModal) => {
     const apiKey = VERCEL_GEMINI_API_KEY || ''; 
     if (!apiKey) {
-        showModal({ title: "AI Yapılandırma Hatası", message: "Yapay zeka için API anahtarı (GEMINI_API_KEY) tanımlanmamış. Vercel ortam değişkenlerini kontrol edin." });
-        console.error("Yapay zeka API anahtarı eksik.");
+        // Hata ayıklama modundan sonra bu mesaj kalıcıdır.
         return "API Anahtarı eksik. Lütfen yöneticiye Vercel ayarlarına anahtarı eklemesini söyleyin.";
     }
 
@@ -237,7 +236,7 @@ const callGeminiChat = async (history, newMessage, showModal) => {
     console.error("AI API Hatası (Chat):", error.message);
     showModal({ 
         title: "Chat Bağlantı Hatası", 
-        message: `Yapay zeka asistanı şu an cevap veremiyor: ${error.message}. Lütfen daha sonra tekrar deneyin.` 
+        message: `Yapay zeka asistanı şu an cevap veremiyor: ${error.message}. Konsolu kontrol edin.` 
     });
     return "Bağlantı hatası.";
   }
