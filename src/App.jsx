@@ -60,31 +60,31 @@ import {
   MessageSquare,
   Globe,
   Loader,
-  ThumbsUp, // Lucide iconları eklendi
-  ThumbsDown // Lucide iconları eklendi
+  ThumbsUp, 
+  ThumbsDown 
 } from 'lucide-react';
 
 // --- SABİT AYARLAR ---
-const LOGO_URL = "https://resmim.net/cdn/2025/11/23/wSwuXc.png"; 
+// DÜZELTME: Güvenilir placeholder kullanılıyor.
+const LOGO_URL = "https://placehold.co/40x40/10b981/ffffff?text=BZ"; 
 const TELEGRAM_LINK = "https://t.me/betzadesohbet";
 
 // --- SPONSOR / AFFILIATE LİNKLERİ ---
 const SPONSOR_1 = {
   name: "Betvino", 
-  image: "https://resmim.net/cdn/2025/11/24/wZkXaI.jpg", 
+  image: "https://placehold.co/400x128/1e3a8a/ffffff?text=SPONSOR+1", 
   link: "https://go.aff.betvinodirect1.com/18wrmewy", 
   color: "from-blue-700 to-blue-900" 
 };
 
 const SPONSOR_2 = {
   name: "Betzade Resmi", 
-  image: "https://resmim.net/cdn/2025/11/24/wZdLyT.jpg", 
+  image: "https://placehold.co/400x128/dc2626/ffffff?text=SPONSOR+2", 
   link: "https://cutt.ly/FrjdD4Pt", 
   color: "from-red-600 to-orange-600" 
 };
 
 // --- FIREBASE YAPILANDIRMASI ---
-// UYARI: Bu kod Canvas ortamında çalıştırıldığında buradaki config yerine global __firebase_config kullanılacaktır.
 const firebaseConfig = {
   apiKey: "AIzaSyBdC1VsXHe5rfy6P_Z18ZxiUI6GN0GXh_4",
   authDomain: "betzade-6765d.firebaseapp.com",
@@ -101,20 +101,14 @@ const db = getFirestore(app);
 const appId = 'betzade-6765d';
 
 // --- YAPAY ZEKA KODU ---
-// DÜZELTME: process.env'ye güvenli erişim için IIFE (Hemen Çalışan Fonksiyon İfadesi) kullanılıyor.
+// KRİTİK DÜZELTME: process erişimini en güvenli şekilde yapıyoruz, yoksa direkt boş string atıyoruz.
 const VERCEL_GEMINI_API_KEY = (() => {
-    try {
-        // Node.js ortamında veya uygun şekilde paketlenmiş tarayıcı ortamında kontrol et
-        if (typeof process !== 'undefined' && process.env) {
-            // Önce Vercel'in otomatik desteklediği prefixsiz değişkenleri dener
-            return process.env.GEMINI_API_KEY || process.env.REACT_APP_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
-        }
-    } catch (e) {
-        // process tanımlı değilse bu hatayı yakalar ve boş döndürür.
-        console.warn("process.env erişimi başarısız oldu (Node.js ortamı değil).");
+    let key = '';
+    if (typeof process !== 'undefined' && process.env) {
+        // Vercel'de bilinen tüm değişken adlarını dener
+        key = process.env.GEMINI_API_KEY || process.env.REACT_APP_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
     }
-    // Hata durumunda veya process tanımlı olmadığında boş dize döndür.
-    return ''; 
+    return key;
 })();
 
 
@@ -156,8 +150,8 @@ const fetchWithRetry = async (url, options, maxRetries = 3) => {
 const callGemini = async (prompt, systemInstruction = "", showModal) => {
     const apiKey = VERCEL_GEMINI_API_KEY || ''; 
     if (!apiKey) {
-        showModal({ title: "AI Yapılandırma Hatası", message: "Yapay zeka için API anahtarı (GEMINI_API_KEY veya REACT_APP_GEMINI_API_KEY) tanımlanmamış." });
-        console.error("Yapay zeka API anahtarı eksik. Lütfen Vercel ortam değişkenlerinizi kontrol edin.");
+        showModal({ title: "AI Yapılandırma Hatası", message: "Yapay zeka için API anahtarı (GEMINI_API_KEY) tanımlanmamış. Vercel ortam değişkenlerini kontrol edin." });
+        console.error("Yapay zeka API anahtarı eksik.");
         return null;
     }
     
@@ -198,8 +192,8 @@ const callGemini = async (prompt, systemInstruction = "", showModal) => {
 const callGeminiChat = async (history, newMessage, showModal) => {
     const apiKey = VERCEL_GEMINI_API_KEY || ''; 
     if (!apiKey) {
-        showModal({ title: "AI Yapılandırma Hatası", message: "Yapay zeka için API anahtarı (GEMINI_API_KEY veya REACT_APP_GEMINI_API_KEY) tanımlanmamış." });
-        console.error("Yapay zeka API anahtarı eksik. Lütfen Vercel ortam değişkenlerinizi kontrol edin.");
+        showModal({ title: "AI Yapılandırma Hatası", message: "Yapay zeka için API anahtarı (GEMINI_API_KEY) tanımlanmamış. Vercel ortam değişkenlerini kontrol edin." });
+        console.error("Yapay zeka API anahtarı eksik.");
         return "API Anahtarı eksik. Lütfen yöneticiye Vercel ayarlarına anahtarı eklemesini söyleyin.";
     }
 
@@ -350,7 +344,7 @@ const CommentSection = ({ couponId, appUser, showModal }) => {
           ))
         )}
       </div>
-      </div>
+    </div>
   );
 };
 
@@ -736,8 +730,13 @@ export default function BetzadeApp() {
           setAppUser({ uid: firebaseUser.uid, email: firebaseUser.email, isAdmin: isAdmin });
           // E-posta doğrulaması kaldırıldığı için direkt dashboard'a yönlendiriyoruz
           setView('dashboard'); 
-        } catch (error) { setAppUser({ uid: firebaseUser.uid, email: firebaseUser.email, isAdmin: false }); }
+        } catch (error) { 
+            console.error("Kullanıcı profilini yükleme hatası:", error);
+            setAppUser({ uid: firebaseUser.uid, email: firebaseUser.email, isAdmin: false }); 
+        }
       } else { setUser(null); setAppUser(null); setView('auth'); }
+      
+      // UYARI: loading burada false olmalı ki, login ekranı veya dashboard gösterilsin.
       setLoading(false);
     });
     return () => unsubscribe();
@@ -918,12 +917,19 @@ export default function BetzadeApp() {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
       <a href={SPONSOR_1.link} target="_blank" rel="noopener noreferrer" className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${SPONSOR_1.color} shadow-lg transform hover:scale-[1.02] transition-all cursor-pointer group h-32`}>
         {SPONSOR_1.image && (
-             <img src={SPONSOR_1.image} alt={SPONSOR_1.name} className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover:opacity-100" />
+             <img 
+                src={SPONSOR_1.image} 
+                alt={SPONSOR_1.name} 
+                className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover:opacity-100" 
+                // Hata alırsanız diye onError ekledim.
+                onError={(e) => {e.target.onerror = null; e.target.src="https://placehold.co/400x128/1e3a8a/ffffff?text=SPONSOR+1+HATA";}}
+            />
         )}
         <div className="absolute inset-0 p-4 flex flex-col justify-between relative z-10">
            <div className="flex items-center justify-between">
              <div className="flex items-center gap-2">
-                 {!SPONSOR_1.image && <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"><Gem className="text-white w-6 h-6" /></div>}
+                 {/* Resim yoksa placeholder eklenir */}
+                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"><Gem className="text-white w-6 h-6" /></div>
                  <h4 className="text-white font-bold text-lg">{SPONSOR_1.name}</h4>
              </div>
              <div className="bg-white/30 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow"></div>
@@ -934,12 +940,19 @@ export default function BetzadeApp() {
 
       <a href={SPONSOR_2.link} target="_blank" rel="noopener noreferrer" className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${SPONSOR_2.color} shadow-lg transform hover:scale-[1.02] transition-all cursor-pointer group h-32`}>
         {SPONSOR_2.image && (
-             <img src={SPONSOR_2.image} alt={SPONSOR_2.name} className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover:opacity-100" />
+             <img 
+                src={SPONSOR_2.image} 
+                alt={SPONSOR_2.name} 
+                className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity group-hover:opacity-100" 
+                // Hata alırsanız diye onError ekledim.
+                onError={(e) => {e.target.onerror = null; e.target.src="https://placehold.co/400x128/dc2626/ffffff?text=SPONSOR+2+HATA";}}
+            />
         )}
         <div className="absolute inset-0 p-4 flex flex-col justify-between relative z-10">
            <div className="flex items-center justify-between">
              <div className="flex items-center gap-2">
-               {!SPONSOR_2.image && <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"><Gem className="text-white w-6 h-6" /></div>}
+               {/* Resim yoksa placeholder eklenir */}
+               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"><Gem className="text-white w-6 h-6" /></div>
                <h4 className="text-white font-bold text-lg">{SPONSOR_2.name}</h4>
              </div>
              <div className="bg-white/30 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow"></div>
