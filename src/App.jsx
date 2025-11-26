@@ -97,12 +97,18 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const appId = 'betzade-6765d';
 
-// --- YAPAY ZEKA ---
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+// --- YAPAY ZEKA KODU ---
+// ARTIK VERCEL'DEN OKUYACAĞIZ: Google'ın kısıtlamasını engeller.
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY; 
 
 const callGemini = async (prompt, systemInstruction = "") => {
   try {
-    if (!GEMINI_API_KEY) return null;
+    if (!GEMINI_API_KEY) {
+        // AI anahtarı Vercel'e eklenmemişse uyarı
+        console.error("HATA: VERCEL API ANAHTARI EKSİK!"); 
+        return null;
+    }
+    
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`,
       {
@@ -126,7 +132,7 @@ const callGemini = async (prompt, systemInstruction = "") => {
 
 const callGeminiChat = async (history, newMessage) => {
   try {
-    if (!GEMINI_API_KEY) return "API Anahtarı eksik.";
+    if (!GEMINI_API_KEY) return "API Anahtarı eksik. Lütfen yöneticiye Vercel ayarlarına anahtarı eklemesini söyleyin.";
     const contents = history.map(msg => ({
       role: msg.role === 'user' ? 'user' : 'model',
       parts: [{ text: msg.text }]
