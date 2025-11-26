@@ -104,9 +104,13 @@ const appId = 'betzade-6765d';
 // KRİTİK DÜZELTME: process erişimini en güvenli şekilde yapıyoruz, yoksa direkt boş string atıyoruz.
 const VERCEL_GEMINI_API_KEY = (() => {
     let key = '';
-    if (typeof process !== 'undefined' && process.env) {
-        // Vercel'de bilinen tüm değişken adlarını dener
-        key = process.env.GEMINI_API_KEY || process.env.REACT_APP_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
+    try {
+        if (typeof process !== 'undefined' && process.env) {
+            // Vercel'de bilinen tüm değişken adlarını dener
+            key = process.env.GEMINI_API_KEY || process.env.REACT_APP_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '';
+        }
+    } catch (e) {
+        // process tanımlı değilse bu blok çalışır ve key boş kalır, bu da beklenendir.
     }
     return key;
 })();
@@ -705,6 +709,24 @@ export default function BetzadeApp() {
     );
 };
 
+// --- Hata Ayıklama Modalı (Sadece AI Anahtar Kontrolü İçin) ---
+const DebugModal = () => {
+    useEffect(() => {
+        if (loading) return;
+        
+        const apiKey = VERCEL_GEMINI_API_KEY;
+        const status = apiKey ? "başarılı bir şekilde yüklendi ve dolu görünüyor." : "boş görünüyor. Lütfen Vercel ayarlarını kontrol edin.";
+
+        showModal({
+            title: "AI Anahtar Durumu (Debug)",
+            message: `Yapay zeka anahtarının değeri ${status}`,
+            type: 'alert'
+        });
+    }, [loading]); 
+    return null; // Arayüzde bir şey göstermez
+};
+
+
   // PWA
   useEffect(() => {
     const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); };
@@ -1013,6 +1035,9 @@ export default function BetzadeApp() {
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col relative overflow-hidden font-sans">
+      {/* AI Anahtar Debug Modalı, sayfa yüklendikten sonra durumu gösterir. */}
+      <DebugModal /> 
+
       <Navbar 
         user={user} 
         appUser={appUser} 
