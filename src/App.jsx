@@ -98,7 +98,7 @@ const db = getFirestore(app);
 const appId = 'betzade-6765d';
 
 // --- YAPAY ZEKA ---
-const GEMINI_API_KEY = "AIzaSyDLPnmTRXs9MxnTpvFNWLEiCo0euuu_M1o"; 
+GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 const callGemini = async (prompt, systemInstruction = "") => {
   try {
